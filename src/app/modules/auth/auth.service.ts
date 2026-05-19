@@ -1,4 +1,4 @@
-import type { TRegister } from './auth.validation';
+import type { TRegister, TVerify } from './auth.validation';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { Auth, VerificationToken } from './auth.model';
@@ -56,6 +56,33 @@ const register = async (payload: TRegister) => {
   };
 };
 
+// verify token
+const verify = async (payload: TVerify) => {
+  const tokenData = await VerificationToken.findOne({
+    token: payload.token,
+  });
+
+  if (!tokenData) {
+    throw new Error('Invalid verification token');
+  }
+
+  const verifiedUser = await Auth.findByIdAndUpdate(
+    tokenData.userId,
+    {
+      isVerified: true,
+    },
+    {
+      new: true,
+      select: 'name email isVerified',
+    },
+  );
+
+  await VerificationToken.findByIdAndDelete(tokenData._id);
+
+  return verifiedUser;
+};
+
 export const AuthService = {
   register,
+  verify,
 };

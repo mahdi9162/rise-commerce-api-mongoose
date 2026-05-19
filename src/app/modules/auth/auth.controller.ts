@@ -16,6 +16,16 @@ const register = catchAsync(async (req: Request, res: Response) => {
   );
 });
 
+//verify
+const verify = catchAsync(async (req: Request, res: Response) => {
+  const token = req.query.token as string;
+
+  const result = await AuthService.verify({ token });
+
+  ApiResponse.success(res, result, 'Account verified successfully', status.OK);
+});
+
 export const AuthController = {
   register,
+  verify,
 };
