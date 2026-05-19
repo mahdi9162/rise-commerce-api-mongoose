@@ -1,4 +1,4 @@
-import type { TRegister, TVerify } from './auth.validation';
+import type { TLogin, TRegister, TVerify } from './auth.validation';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { Auth, VerificationToken } from './auth.model';
@@ -82,7 +82,38 @@ const verify = async (payload: TVerify) => {
   return verifiedUser;
 };
 
+// login
+const login = async (payload: TLogin) => {
+  const user = await Auth.findOne({
+    email: payload.email,
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  if (!user.isVerified) {
+    throw new Error('Please verify your email before login');
+  }
+
+  const isPasswordMatched = await bcrypt.compare(payload.password, user.password);
+
+  if (!isPasswordMatched) {
+    throw new Error('Invalid password');
+  }
+
+  return {
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      isVerified: user.isVerified,
+    },
+  };
+};
+
 export const AuthService = {
   register,
   verify,
+  login,
 };
